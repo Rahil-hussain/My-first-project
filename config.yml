@@ -107,10 +107,7 @@ jobs:
               ./gradlew assembleRelease > ${logs_dir}/gradle_assemble_release.txt 2>&1
 
               echo "App build completed!!"
-            else
-              echo "Skipping AMP build, RUN_AMP is not set to true."
-            fi
-            cd $auto_dir
+              cd $auto_dir
               cp MVNEXT/android/app/build/outputs/apk/amp/release/app-amp-release.apk .
               export apk_path=${auto_dir}/app-amp-release.apk
               sudo chmod 444 $apk_path
@@ -126,3 +123,15 @@ jobs:
             else
               echo "Skipping AMP build, RUN_AMP is not set to true."
             fi
+workflows:
+  version: 2
+  deploy-and-test:
+    jobs:
+      - ecr-login:
+          context:
+            - aws-credentials
+      - test-mvretail-environment:
+          context:
+            - aws-credentials
+          requires:
+            - ecr-login
