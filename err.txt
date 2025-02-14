@@ -1,0 +1,30 @@
+> Task :lodev09_react-native-exify:compileReleaseKotlin
+w: file:///home/jenkins/project/MVNEXT/node_modules/@lodev09/react-native-exify/android/src/main/java/com/lodev09/exify/ExifyTags.kt:71:34 'TAG_ISO_SPEED_RATINGS: String' is deprecated. Deprecated in Java
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':react-native-community_blur:generateReleaseRFile'.
+> Could not resolve all files for configuration ':react-native-community_blur:releaseCompileClasspath'.
+   > Failed to transform BlurView-version-2.0.3.aar (com.github.Dimezis:BlurView:version-2.0.3) to match attributes {artifactType=android-symbol-with-package-name, org.gradle.category=library, org.gradle.dependency.bundling=external, org.gradle.libraryelements=aar, org.gradle.status=release, org.gradle.usage=java-api}.
+      > Could not find BlurView-version-2.0.3.aar (com.github.Dimezis:BlurView:version-2.0.3).
+        Searched in the following locations:
+            https://www.jitpack.io/com/github/Dimezis/BlurView/version-2.0.3/BlurView-version-2.0.3.aar
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+
+* Get more help at https://help.gradle.org
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+See https://docs.gradle.org/8.0.1/userguide/command_line_interface.html#sec:command_line_warnings
+
+BUILD FAILED in 9m 12s
+146 actionable tasks: 146 executed
+
+Exited with code exit status 1
