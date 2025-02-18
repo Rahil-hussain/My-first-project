@@ -1,0 +1,318 @@
+version: 2.1
+
+# orbs:
+#   android: circleci/android@3.0.0
+#   gradle: circleci/gradle@3.0.0
+
+jobs:
+  ecr-login:
+    circleci_ip_ranges: true # opts the job into the IP ranges feature
+    docker:
+      - image: cimg/aws:2025.01 # CircleCI base image for AWS CLI
+    steps:
+      - run:
+          name: Authenticate with ECR
+          command: |
+            aws --version
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws configure set default.region us-west-2
+            aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 516117289716.dkr.ecr.us-west-2.amazonaws.com
+
+  # build-android:
+  #   executor:
+  #     name: android/android_machine
+  #     resource_class: large
+  #     tag: default
+  #   steps:
+  #     - checkout
+  #     # - android/install-sdk  # Ensure Android SDK is available
+  #     - run:
+  #         name: Set Java Version
+  #         command: |
+  #           echo "Testing mvretail environment..."
+  #           export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+  #           export PATH=$JAVA_HOME/bin:$PATH
+  #           echo "Java Home: $JAVA_HOME"
+  #           echo "Path: $PATH"
+  #           java -version
+  #           python --version
+  #           node --version
+  #           npm --version
+  #           echo "Environment verified successfully!"
+  #           ls -la
+  #     - run:
+  #         name: Install nvm 18
+  #         command: |
+  #           nvm install 18
+  #           nvm use 18
+  #           node --version
+  #           npm --version
+  #           echo "Installed nvm"
+  #     - run:
+  #         name: Install Python 3.10.9 using pyenv
+  #         command: |
+  #           sudo rm -rf /opt/circleci/.pyenv #remove existing pyenv
+  #           curl https://pyenv.run | bash
+  #           export PATH="$HOME/.pyenv/bin:$PATH"
+  #           eval "$(pyenv init --path)"
+  #           eval "$(pyenv virtualenv-init -)"
+  #           pyenv install 3.10.9
+  #           pyenv global 3.10.9
+  #           python --version
+
+  #     - run:
+  #         name: installing the automation requirements
+  #         command: |
+  #           export auto_dir=`pwd`
+  #           mkdir logs
+  #           env > env.txt
+  #           export logs_dir=${auto_dir}/logs
+  #           echo "Test run could not start!" > results.txt 
+  #           pip3 install pip --upgrade > ${logs_dir}/python_pip_upgrade.txt 2>&1
+  #           pip3 install --user -r requirements.txt > ${logs_dir}/python_pip_requirements_install.txt 2>&1
+  #           echo "automation requirements finished installing"
+  #           cat scripts/replace_line.py
+  #     - run:
+  #         name: Amp build step
+  #         command: |
+  #           echo "Amp build step started"
+  #           export logs_dir=`pwd`/logs  # ensuring logs_dir is specificly set to current path
+  #           echo "logs dir set"
+  #           export GRADLE_OPT="-Xmx6G"
+  #           echo "gradle exported"
+  #           git clone --depth 1 https://x-access-token:$GH_PAT@github.com/MoVista/MVNEXT.git --branch released --single-branch
+  #           echo "git cloned"
+  #           export SENTRY_DISABLE_AUTO_UPLOAD=true
+  #           echo "Starting Building apk!!"
+
+  #           sudo chown -R root:circleci /opt/android
+  #           sudo chmod -R 775 /opt/android
+  #           export ORG_GRADLE_PROJECT_RELEASE_STORE_KEY_ALIAS=MVAndroidKey ORG_GRADLE_PROJECT_RELEASE_STORE_FILE=MVNEXT_Release ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD=$MVNEXT_RELEASE_KEY ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD=$MVNEXT_RELEASE_KEY ORG_GRADLE_PROJECT_BACKGROUND_GEOLOCATION_LIB_KEY=$MVNEXT_GEO_LOCATION_KEY
+  #           # python3 scripts/replace_line.py MVNEXT/android/gradle.properties "org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" "org.gradle.jvmargs=-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+  #           sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' MVNEXT/android/gradle.properties
+  #           echo "test"
+  #           cd MVNEXT
+  #           sudo npm install --global yarn 
+
+
+  #           yarn install > ${logs_dir}/yarn_install_output.txt 2>&1
+  #           yarn react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/build/intermediates/res/merged/release/ > ${logs_dir}/yarn_asset_bundle.txt 2>&1
+  #           cd android     
+  #           ./gradlew assembleRelease > ${logs_dir}/gradle_assemble_release.txt 2>&1
+  #           echo "App build completed!!"
+            
+  #           cd $auto_dir
+  #           cp MVNEXT/android/app/build/outputs/apk/amp/release/app-amp-release.apk .
+  #           export apk_path=${auto_dir}/app-amp-release.apk
+  #           sudo chmod 444 $apk_path
+
+  test-mvretail-environment:
+    circleci_ip_ranges: true # opts the job into the IP ranges feature
+    docker:
+      - image: 516117289716.dkr.ecr.us-west-2.amazonaws.com/aio-automation:latest
+
+    steps:
+      - checkout
+      # - run:
+      #    command: ssh -T git@github.com
+      - add_ssh_keys: 
+          fingerprints:
+             - "SHA256:d2ahEjfwck+1xIMcluWjZawVXifYlceBQq+zWM6oYGs"
+
+      # - run:
+      #     name: Clone Private Repo with PAT
+      #     command: git clone https://x-access-token:$GH_PAT@github.com/MoVista/MVRetail.git
+
+      - run:
+         name: Verify mvretail Environment
+         command: |
+            echo "Testing mvretail environment..."
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            echo "Java Home: $JAVA_HOME"
+            echo "Path: $PATH"
+            java -version
+            python --version
+            php -v
+            redis-server --version
+            echo "Environment verified successfully!"
+      - run:
+          name: installing the automation requirements
+          command: |
+            export auto_dir=`pwd`
+            mkdir logs
+            env > env.txt
+            export logs_dir=${auto_dir}/logs
+            echo "Test run could not start!" > results.txt 
+            pip3 install pip --upgrade > ${logs_dir}/python_pip_upgrade.txt 2>&1
+            pip3 install --user -r requirements.txt > ${logs_dir}/python_pip_requirements_install.txt 2>&1
+            echo "automation requirements finished installing"  
+
+      # adding persist logs directory to workspace so its accessible in the later steps
+      - persist_to_workspace:
+           root: .
+           paths:
+             - logs 
+            
+      - run:
+          name: Branch Check and System Version Verification
+          command: |
+            if echo "$MVRETAIL_BRANCH" | grep -q "excludeci"; then
+                echo "Branch contains excludeci keyword. No Automation Test runs against this branch!!"
+                exit 0
+            else
+                echo "Proceed with running Automation Test runs against this branch!!"
+            fi
+            
+            readlink /proc/$$/exe
+            echo "Java Path: `which java`"
+            echo "PHP Version: `php --version`"
+            echo "Chromedriver Version: `chromedriver --version`"
+            echo "Google Chrome Version: `google-chrome --version`"
+      - run:
+          name: Update /etc/hosts
+          command: |
+            echo "127.0.0.1 macdev2.mvretail.com" | sudo tee -a /etc/hosts
+
+      # attaching workspace to access logs directory created in earlier step
+      - attach_workspace:
+           at: .
+
+      - run:
+          name: AMP Build Step (Conditional)
+          command: |
+            export RUN_AMP=true
+            export logs_dir=`pwd`/logs  # ensuring logs_dir is specificly set to current path
+            export MVRETAIL_BRANCH="developer"
+            #debug entire directory
+            # echo "checking current directory structure attaching workspace"
+            # ls -la
+
+            # debugging to check logs_dir exists and perms
+            # echo "checking logs directory"
+            # ls -ld ${logs_dir} #show directory exists and perms
+            # ls ${logs_dir} #list any existing files in the logs directory
+
+
+            if [ $RUN_AMP = true ]; then
+            export GRADLE_OPT="-Xmx8G"
+            # git clone --depth 1 https://x-access-token:$GH_PAT@github.com/MoVista/MVNEXT.git --branch released --single-branch
+            git clone --depth 1 https://x-access-token:$GH_PAT@github.com/MoVista/MVNEXT.git --branch automation/removingBlurTest --single-branch
+            # git clone --depth 1 git@github.com:MoVista/MVNEXT.git --branch $MVNEXT_BRANCH --single-branch
+
+            export SENTRY_DISABLE_AUTO_UPLOAD=true
+            echo "Starting Building apk!!"
+
+            sudo chown -R root:jenkins /opt/android
+            sudo chmod -R 775 /opt/android
+            export ORG_GRADLE_PROJECT_RELEASE_STORE_KEY_ALIAS=MVAndroidKey ORG_GRADLE_PROJECT_RELEASE_STORE_FILE=MVNEXT_Release ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD=$MVNEXT_RELEASE_KEY ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD=$MVNEXT_RELEASE_KEY ORG_GRADLE_PROJECT_BACKGROUND_GEOLOCATION_LIB_KEY=$MVNEXT_GEO_LOCATION_KEY
+            python3 scripts/replace_line.py MVNEXT/android/gradle.properties "org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" "org.gradle.jvmargs=-Xmx8192m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+            cd MVNEXT
+            sudo npm install --global yarn  
+            # > ${logs_dir}/yarn_global_module_install.txt 2>&1
+            yarn install
+            # > ${logs_dir}/yarn_install_output.txt 2>&1
+            yarn react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/build/intermediates/res/merged/release/            # > ${logs_dir}/yarn_asset_bundle.txt 2>&1
+            cd android
+            ./gradlew --stop
+            ./gradlew --no-daemon clean
+            ./gradlew assembleRelease --info --stacktrace  
+            # ./gradlew assembleRelease
+            # > ${logs_dir}/gradle_assemble_release.txt 2>&1
+            echo "App build completed!!"
+            
+            cd $auto_dir
+            cp MVNEXT/android/app/build/outputs/apk/amp/release/app-amp-release.apk .
+            export apk_path=${auto_dir}/app-amp-release.apk
+            sudo chmod 444 $apk_path
+            # reinstall scandit---barcode module if ssing files are causing issues
+            npm uninstall scandit-react-native-datacapture-barcode
+            npm install scandit-react-native-datacapture-barcode
+            npm install
+            ,/gradlew clean
+            ./gradlew assembleRelease --info --stacktrace
+            fi
+
+            echo "cloning mvretail and simplesamlphp"
+            git clone --depth 1 https://x-access-token:$GH_PAT@github.com/MoVista/MVRetail.git --branch developer --single-branch > ${logs_dir}/git_mvretail_log.txt 2>&1
+            cat ${logs_dir}/git_mvretail_log.txt
+            git clone --depth 1 https://x-access-token:$GH_PAT@github.com/MoVista/SimpleSAMLphp.git --branch master --single-branch > ${logs_dir}/git_simplesamlphp_log.txt 2>&1
+            cat ${logs_dir}/git_simplesamlphp_log.txt
+            # echo "test complete for clone and logs_dir"
+            
+            mv SimpleSAMLphp simplesamlphp
+
+            sudo cp -r MVRetail /var/www/
+            sudo cp -r simplesamlphp /var/
+
+            echo "installing loguru dependency"
+
+            # export MCP_URL=https://devw-bastion-internal.mvretail.com
+            export MCP_URL=https://domains.mvretail.com
+            echo "mcp exported"
+            python3 get_ui_artifacts.py > ${logs_dir}/get_ui_artifacts_log.txt
+
+            if [ -f assets.zip ]; then
+              # decompress asset zip into expected location
+              echo "assets downloaded, decompressing..."
+              sudo unzip assets.zip -d /var/www/MVRetail/main > ${logs_dir}/decompress_assets.txt 2>&1
+              echo "assets decompressed"
+            else
+              echo "assets.zip could not be found! could not retrieve compiled web assets from mcp/gha, aborting the automation run"
+              exit 1
+            fi
+
+            sudo chmod -R 777 /var/www/MVRetail/assets
+            sudo chown -R www-data /var/www/MVRetail/assets
+
+            # start required services in instance
+            sudo service mariadb start
+            sudo service apache2 start
+            sudo service redis-server start
+
+            # # run sql dump files that define db and user and table schema used in seed data so far
+            sudo cp container/web/_ss_environment.php /var/www/
+            sudo mysql < container/mariadb/initdb.d/01-databases.sql
+            sudo mysql < container/mariadb/initdb.d/02-timezones.sql
+            sudo mysql vmsite < seed_data/mvretail_schema.sql
+
+            export sql_address=macdev2.mvretail.com
+            export mvretail_sql_database=vmsite
+            export common_sql_database=vmsiteCommon
+            export messaging_sql_database=vmsite_msgCore
+            export LOGURU_LEVEL=INFO
+            export headless=True
+            export screenshots=True
+            export PYTHONPATH=.
+            export url=https://macdev2.mvretail.com
+            export device_farm_address=http://dev-app6.mvretail.com:7106/api/v1
+            export device_farm_token=52afad51681b41628ab151e719caddac35502e9325ed4425ad586b222e4863aa
+            export run_mobile_tests=True
+            export use_mobile_device_farm=True
+            export use_broker_as_proxy_intermediary=True
+            export broker_ssh_user=jenkins_service
+            export timeout=20
+
+            echo "starting threaded automated test run"
+            python run_all.py
+            echo $?
+
+
+workflows:
+  version: 2
+  deploy-and-test:
+    jobs:
+      - ecr-login:
+          context:
+            - aws-credentials
+      - test-mvretail-environment:
+          context:
+            - aws-credentials
+          requires:
+            - ecr-login
+      # - build-android:
+      #     context:
+      #       - aws-credentials
+      #     requires:
+      #       - ecr-login
